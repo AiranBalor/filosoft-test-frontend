@@ -1,26 +1,43 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import axios from 'axios';
+import { saveAs } from 'file-saver';
 
-function App() {
+const App: React.FC = () => {
+  const [url, setUrl] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setLoading(true);
+
+    try {
+      const response = await axios.post('http://localhost:8080/generate-pdf', { url }, { responseType: 'blob' });
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      saveAs(blob, 'document.pdf');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div className="container">
+      <h1>Сайт-парсер PDF Генератор</h1>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="Введите URL"
+          required
+        />
+        <button type="submit" disabled={loading}>
+          {loading ? 'Генерация...' : 'Сгенерировать PDF'}
+        </button>
+      </form>
     </div>
   );
-}
+};
 
 export default App;
